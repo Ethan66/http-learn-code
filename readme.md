@@ -91,4 +91,5 @@ HTTP发送请求是基于TCP的连接的，TCP连接需要3次握手。假如HTT
 Http1.1的长连接是串行的，就是一个TCP连接可以发送多个http请求，但是有先后顺序的。这样还是耗费了时间。所以Chrome支持了并行创建6个TCP，只要有一个TCP的http发送成功了，就发送下一个HTTP请求。这样就节约了时间。
 
 3. 怎么验证？
-Chrome--Network--Name右键显示Connection ID，就是查看TCP创建的id,每个请求都复用了TCP，而且最多超过6个TCP
+百度，Chrome--Network--Name右键显示Connection ID，就是查看TCP创建的id,每个请求都复用了TCP，而且最多超过6个TCP
+谷歌，是HTTP2.0，只有一个TCP，因为2.0支持并行发送http请求
