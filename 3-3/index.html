@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // 第二步：浏览器渲染html文件，用fetch发送第二个请求
+    fetch('http://127.0.0.1:8887/', {
+      method: 'POST',
+      headers: {
+        'X-Test-Cors': '123'
+      }
+    })
+    // 第五步：浏览器渲染html文件，用fetch发送PUT请求
+    setTimeout(() => {
+      fetch('http://127.0.0.1:8887/', {
+        method: 'PUT',
+        headers: {
+          'X-Test-Cors': '123'
+        }
+      })
+    }, 5000)
+  </script>
+</body>
+</html>
