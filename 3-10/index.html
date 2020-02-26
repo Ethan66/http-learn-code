@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <!--在meta进行csp,和head上限制是一样的,但是不能发送报告-->
+  <!-- <meta http-equiv="Content-Security-Policy" content="script-src 'self'"> -->
+  <title>Document</title>
+</head>
+<body>
+  <img src="http://i0.hdslb.com/bfs/article/91024e5a15b3f04c399a7a64b88126afc584fc5d.jpg" alt="">
+  <form action="http://www.baidu.com">
+    <input type="submit">
+  </form>
+  <script>console.log('inline js')</script>
+  <script src="script.js"></script>
+  <script src="https://cdn.bootcss.com/jquery/3.4.1/core.js"></script>
+</body>
+</html>

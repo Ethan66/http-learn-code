@@ -72,17 +72,17 @@ Cache-Control: 'max-stale=seconds': 客户端主动添加的，在max-age过期�
 must-revalidate: max-age过期后，需要重新发起请求重新获取，然后验证缓存是否过期
 proxy-revalidate: 缓存服务器中，和must-revalidate一样。
 
-#### 3-5 验证资源能否使用缓存
+#### 3-5 验证资源能否使用缓存(代码)
 
 ![浏览器发起请求查找缓存判断逻辑](https://i.loli.net/2020/02/21/nyBEd8VATW6jLPz.png)
 
 1、last-modified: 上一次修改时间。浏览器发起请求，服务器带上last-modified传给浏览器。浏览器下一次请求的时候带上If-Modified-Since，然后服务器进行这次修改时间和If-Modified-Since对比，以验证资源是否需要更新。
 2、Etag: 数据签名。每次生成的签名都不一样。浏览器下一次请求的时候带上If-None-Match，服务器进行对比验证是否需要更新。
 
-#### 3-6 cookie和session
+#### 3-6 cookie和session(代码)
 1. 设置cookie。Set-Cookie: ['id=123', 'id2=123;max-age=20', 'id3=123;expires=20300102', 'id4=123;Secure', 'id5=123;HttpOnly']。max-age:时间长度。expires:时间截止日期。Secure:只能在https里发送Cookie。HttpOnly:js不能获取cookie
 
-#### 3-7 TCP的长连接
+#### 3-7 TCP的长连接(代码)
 
 1. 为什么TCP需要长连接？
 HTTP发送请求是基于TCP的连接的，TCP连接需要3次握手。假如HTTP发送请求后就马上断了TCP连接，下次请求就会重新连接TCP，这就耗费了时间。所以Http1.1的时候，默认都是TCP长连接。
@@ -92,4 +92,91 @@ Http1.1的长连接是串行的，就是一个TCP连接可以发送多个http请
 
 3. 怎么验证？
 百度，Chrome--Network--Name右键显示Connection ID，就是查看TCP创建的id,每个请求都复用了TCP，而且最多超过6个TCP
-谷歌，是HTTP2.0，只有一个TCP，因为2.0支持并行发送http请求
+谷歌，是HTTP2.0，只有一个TCP，因为2.0支持并行发送http请求，页面上所有的请求都在一个TCP连接上请求的。
+
+#### 3-8 数据协商(对照Chrome-Network, 代码)
+数据协商：客户端发送给服务端的时候申明，我应该需要的数据格式，数据相关的限制是什么样的。服务端会针对申明做出一个判断，返回不同类型的数据。
+
+|Request|Response|含义|
+|:--:|:--:|:--:|
+|Accept|Content-Type|我想要的数据类型|
+|Accept-Encoding|Content-Encoding|怎么样的编码方式进行传输，对数据进行压缩|
+|Accept-Language|Content-Language|展示的语言，zh-CN,zh;q=0.9, q表示权重，越大权重越重|
+|User-Agent||浏览器的相关信息，可以判断PC端和移动端|
+
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36
+Mozilla/5.0: 浏览器是王景公司出的，为了兼容。
+Windows NT 10.0：操作系统。
+Win64; x64：是X64平台。
+AppleWebKit/537.36：浏览器内核。
+KHTML, like Gecko：渲染引擎：KHTML。
+Chrome/74.0.3729.169：Chrome版本号。
+
+#### 3-9 重定向(300-399, 代码)
+使用场景：当前url连接已停用，变成新的url地址。服务端返回300-399的状态码，浏览器根据Code码和location进行二次请求新的url。
+
+1. 302: 临时重定向，浏览器每次都会向服务端请求老的接口，然后浏览器再根据服务端返回的location请求新的接口
+2. 301：永久重定向，浏览器第一次请求老的接口，浏览器拿到code是301,就把location给缓存了，第二次请求老的接口其实是拿缓存的数据，不会向服务端发起请求。所以老接口只请求一遍。
+
+#### 3-10 内容安全策略Content-Security-Policy(代码)
+作用：1. 限制资源获取。2. 报告资源获取越权
+限制方式：1. default-src限制全局跟链接请求有关的限制资源范围。2. 根据资源类型限制资源范围。
+资源类型：connect-src/img-src/style-src/script-src/font-src/media-src/frame-src/mainfest-src
+
+XSS: 在富文本编辑器里添加js脚本，然后渲染页面的时候进行执行攻击，获取用户的信息。阻止(代码)
+
+#### 4-1 Nginx基本配置
+```
+./conf/nginx.conf
+http {
+  include server/*.conf; // 将自定义的配置全配在server文件夹下，方便管理，不用和默认配置写一起。
+}
+
+./conf/server/test.conf
+server {
+  listen 80;
+  server_name test.com; // 域名，浏览器访问的域名
+
+  location / {
+    proxy_pass http://127.0.0.1:8888; // 浏览器发送给nginx，nginx转发给http://127.0.0.1:8888
+    proxy_set_header Host $host; // 如果不设置，服务端接收到的host是http://127.0.0.1:8888，就不能区分是哪个域名请求的
+  }
+}
+server {
+  listen 80;
+  server_name a.test.com; // 域名，浏览器访问的域名
+
+  location / {
+    proxy_pass http://127.0.0.1:8000; // 实现不同域名请求不同地址
+    proxy_set_header Host $host; 
+  }
+}
+```
+
+#### 4-2 Nginx代理缓存(代码)
+因为使用了代理就是浏览器请求代理，代理再请求服务端，使用代理缓存就可以省略了代理请求服务端
+使用场景：1、公共资源：如CSS,JS等。2、某个用户已经请求过一次了，再次请求可以直接拿代理缓存。
+
+使用方式：一定要服务端请求头返回Cache-Control: 'max-age=200',是服务端告诉代理服务器，这个接口需要缓存，代理服务器才会缓存。
+
+Cache-Control其他值：
+```
+Cache-Control: 'max-age=2' // 浏览器和代理都缓存20秒
+Cache-Control: 'max-age=2, s-maxage=20' // 浏览器缓存2秒，代理缓存20秒.
+Cache-Control: 'max-age=2, s-maxage=20 private' // private表示只有浏览器才能缓存，代理服务器不能缓存.
+Cache-Control: 'max-age=2, s-maxage=20 no-store' // 都不缓存。
+'Cache-Control': 's-maxage=200',
+'Vary': 'X-Test-Cache' // 通过对应的头，只有对应的头一样才有缓存，不一样的还是要请求服务器
+```
+
+#### 4-3 HTTPS
+HTTP为什么不安全：
+HTTP传输是明文传输的，HTTP数据包被拦截了，可以拿到所有的数据。
+
+HTTPS为什么安全：
+HTTPS有私钥和公钥的概念。公钥是加密传输的信息的，加密的信息传给服务端后，只有用私钥才能解密出来。私钥是放在服务端的，不会进行传输。公钥是在TCP握手的时候传输的。
+![HTTPS的三次握手](https://i.loli.net/2020/02/26/vutAji3hL6MBczs.png)
+
+#### 4-4 使用Nginx部署HTTPS
+
+#### 4-5 使用Nginx部署HTTP2

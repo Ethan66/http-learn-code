@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <form action="/form" method="POST" enctype="application/x-www-form-urlencoded">
+    <input type="text" name="name">
+    <input type="password" name="password">
+    <input type="submit">
+  </form>
+  <!--multipart/form-data使用场景：当传输中有file文件时，不能用字符串传输，需要用二进制传输-->
+  <form action="/form" id="form" method="POST" enctype="multipart/form-data">
+    <input type="text" name="name">
+    <input type="password" name="password">
+    <input type="file" name="file">
+    <input type="submit">
+  </form>
+  <script>
+    // ajax请求发送multipart/form-data请求
+   /*  var form = document.querySelector('form')
+    form.addEventListener('submit', function (e) {
+      e.preventDefault()
+      var formData = new formData(form)
+      fetch('/form', {
+        method: 'POST',
+        body: formData
+      })
+    }) */
+  </script>
+</body>
+</html>
